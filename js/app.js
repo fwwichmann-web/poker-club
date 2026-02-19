@@ -50,7 +50,7 @@ const App = {
   // Fetch all active players (cached)
   async getPlayers(forceRefresh = false) {
     if (this.playersCache.length && !forceRefresh) return this.playersCache;
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('players')
       .select('*')
       .order('name');

@@ -6,8 +6,8 @@ const Stats = {
     container.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
 
     const [gamesRes, resultsRes] = await Promise.all([
-      supabase.from('games').select('*').order('game_date', { ascending: false }),
-      supabase.from('results').select('*, players(name)')
+      db.from('games').select('*').order('game_date', { ascending: false }),
+      db.from('results').select('*, players(name)')
     ]);
 
     if (gamesRes.error || resultsRes.error) {

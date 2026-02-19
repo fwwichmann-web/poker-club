@@ -5,7 +5,7 @@ const GameHistory = {
     const container = document.getElementById('view-history');
     container.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
 
-    const { data: games, error } = await supabase
+    const { data: games, error } = await db
       .from('games')
       .select('*, results(*, players(name))')
       .order('game_date', { ascending: false });
@@ -98,7 +98,7 @@ const GameHistory = {
     App.hideModal();
     App.showLoading();
 
-    const { error } = await supabase.from('games').delete().eq('id', gameId);
+    const { error } = await db.from('games').delete().eq('id', gameId);
 
     App.hideLoading();
 

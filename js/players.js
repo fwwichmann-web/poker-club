@@ -58,7 +58,7 @@ const Players = {
     if (!name) { App.toast('Enter a player name', 'error'); return; }
 
     App.showLoading();
-    const { error } = await supabase.from('players').insert({ name });
+    const { error } = await db.from('players').insert({ name });
     App.hideLoading();
 
     if (error) {
@@ -79,8 +79,8 @@ const Players = {
     App.showLoading();
 
     const [playerRes, resultsRes] = await Promise.all([
-      supabase.from('players').select('*').eq('id', playerId).single(),
-      supabase.from('results').select('*, games(game_date)').eq('player_id', playerId).order('created_at', { ascending: false })
+      db.from('players').select('*').eq('id', playerId).single(),
+      db.from('results').select('*, games(game_date)').eq('player_id', playerId).order('created_at', { ascending: false })
     ]);
 
     App.hideLoading();
@@ -158,7 +158,7 @@ const Players = {
 
   async toggleActive(playerId, currentActive) {
     App.showLoading();
-    const { error } = await supabase
+    const { error } = await db
       .from('players')
       .update({ active: !currentActive })
       .eq('id', playerId);

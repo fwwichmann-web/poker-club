@@ -185,7 +185,7 @@ const EnterGame = {
     App.showLoading();
 
     // Create game
-    const { data: game, error: gameErr } = await supabase
+    const { data: game, error: gameErr } = await db
       .from('games')
       .insert({ game_date: gameDate, notes: notes || null })
       .select()
@@ -215,7 +215,7 @@ const EnterGame = {
       });
     });
 
-    const { error: resErr } = await supabase
+    const { error: resErr } = await db
       .from('results')
       .insert(resultRows);
 
@@ -224,7 +224,7 @@ const EnterGame = {
     if (resErr) {
       App.toast('Failed to save results: ' + resErr.message, 'error');
       // Clean up the game
-      await supabase.from('games').delete().eq('id', game.id);
+      await db.from('games').delete().eq('id', game.id);
       return;
     }
 
@@ -240,8 +240,8 @@ const EnterGame = {
     container.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
 
     const [gameRes, resultsRes] = await Promise.all([
-      supabase.from('games').select('*').eq('id', gameId).single(),
-      supabase.from('results').select('*').eq('game_id', gameId)
+      db.from('games').select('*').eq('id', gameId).single(),
+      db.from('results').select('*').eq('game_id', gameId)
     ]);
 
     if (gameRes.error || resultsRes.error) {
@@ -321,7 +321,7 @@ const EnterGame = {
     App.showLoading();
 
     // Update game
-    const { error: gameErr } = await supabase
+    const { error: gameErr } = await db
       .from('games')
       .update({ game_date: gameDate, notes: notes || null })
       .eq('id', gameId);
@@ -333,7 +333,7 @@ const EnterGame = {
     }
 
     // Delete old results, insert new
-    await supabase.from('results').delete().eq('game_id', gameId);
+    await db.from('results').delete().eq('game_id', gameId);
 
     const resultRows = [];
     this.selectedPlayers.forEach(id => {
@@ -352,7 +352,7 @@ const EnterGame = {
       });
     });
 
-    const { error: resErr } = await supabase.from('results').insert(resultRows);
+    const { error: resErr } = await db.from('results').insert(resultRows);
 
     App.hideLoading();
 

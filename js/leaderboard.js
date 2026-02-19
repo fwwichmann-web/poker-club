@@ -5,7 +5,7 @@ const Leaderboard = {
     const container = document.getElementById('view-leaderboard');
     container.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
 
-    const { data: results, error } = await supabase
+    const { data: results, error } = await db
       .from('results')
       .select('player_id, points, position, is_bubble, game_id');
 
