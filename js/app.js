@@ -43,7 +43,7 @@ const App = {
     } catch (err) {
       console.error('View load error:', err);
       const container = document.getElementById(`view-${viewName}`);
-      if (container) container.innerHTML = '<div class="empty-state"><p>Something went wrong. Check your connection and try again.</p></div>';
+      if (container) container.innerHTML = `<div class="empty-state"><p>Something went wrong.<br><small style="color:var(--red)">${err.message || err}</small></p></div>`;
     }
   },
 
