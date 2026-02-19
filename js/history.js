@@ -1,6 +1,6 @@
 // ===== Game History View =====
 
-const History = {
+const GameHistory = {
   async load() {
     const container = document.getElementById('view-history');
     container.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
@@ -44,7 +44,7 @@ const History = {
 
       html += `
         <div class="game-card" data-game-id="${game.id}">
-          <div class="game-card-header" onclick="History.toggle('${game.id}')">
+          <div class="game-card-header" onclick="GameHistory.toggle('${game.id}')">
             <div>
               <div class="game-date">${App.formatDate(game.game_date)}</div>
               <div class="game-summary">${playerCount} players · ${podiumText}</div>
@@ -67,7 +67,7 @@ const History = {
             ${game.notes ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;font-style:italic">${this.escHtml(game.notes)}</div>` : ''}
             <div class="game-actions">
               <button class="btn btn-secondary btn-sm flex-1" onclick="EnterGame.loadForEdit('${game.id}')">Edit</button>
-              <button class="btn btn-danger btn-sm flex-1" onclick="History.confirmDelete('${game.id}')">Delete</button>
+              <button class="btn btn-danger btn-sm flex-1" onclick="GameHistory.confirmDelete('${game.id}')">Delete</button>
             </div>
           </div>
         </div>`;
@@ -89,7 +89,7 @@ const History = {
       <p style="margin-bottom:16px">Are you sure? This will permanently delete this game and all its results.</p>
       <div class="confirm-actions">
         <button class="btn btn-secondary" onclick="App.hideModal()">Cancel</button>
-        <button class="btn btn-danger" onclick="History.deleteGame('${gameId}')">Delete</button>
+        <button class="btn btn-danger" onclick="GameHistory.deleteGame('${gameId}')">Delete</button>
       </div>
     `);
   },

@@ -31,13 +31,19 @@ const App = {
     this.loadView(viewName);
   },
 
-  loadView(viewName) {
-    switch (viewName) {
-      case 'leaderboard': Leaderboard.load(); break;
-      case 'enter-game': EnterGame.load(); break;
-      case 'history': History.load(); break;
-      case 'players': Players.load(); break;
-      case 'stats': Stats.load(); break;
+  async loadView(viewName) {
+    try {
+      switch (viewName) {
+        case 'leaderboard': await Leaderboard.load(); break;
+        case 'enter-game': await EnterGame.load(); break;
+        case 'history': await GameHistory.load(); break;
+        case 'players': await Players.load(); break;
+        case 'stats': await Stats.load(); break;
+      }
+    } catch (err) {
+      console.error('View load error:', err);
+      const container = document.getElementById(`view-${viewName}`);
+      if (container) container.innerHTML = '<div class="empty-state"><p>Something went wrong. Check your connection and try again.</p></div>';
     }
   },
 
