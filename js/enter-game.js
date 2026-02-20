@@ -66,6 +66,15 @@ const EnterGame = {
           <select id="bubble-player"><option value="">None</option></select>
         </div>
         <div class="form-group">
+          <label class="checkbox-item" style="display:inline-flex;width:auto;margin-bottom:8px">
+            <input type="checkbox" id="enable-final-table">
+            <span>Mark Final Table (top 9)</span>
+          </label>
+          <div id="final-table-section" style="display:none">
+            <div class="checkbox-grid" id="final-table-checkboxes"></div>
+          </div>
+        </div>
+        <div class="form-group">
           <label>Notes (optional)</label>
           <textarea id="game-notes" rows="2" placeholder="e.g. Big hand: AA vs KK"></textarea>
         </div>
@@ -103,6 +112,12 @@ const EnterGame = {
     // Podium/bubble change → preview
     ['pos-1', 'pos-2', 'pos-3', 'pos-4', 'bubble-player'].forEach(id => {
       document.getElementById(id).addEventListener('change', () => this.updatePreview());
+    });
+
+    // Final table toggle
+    document.getElementById('enable-final-table').addEventListener('change', (e) => {
+      document.getElementById('final-table-section').style.display = e.target.checked ? 'block' : 'none';
+      if (e.target.checked) this.updateFinalTableCheckboxes();
     });
 
     // 3rd place toggle
@@ -152,6 +167,57 @@ const EnterGame = {
     });
 
     this.updatePreview();
+    if (document.getElementById('enable-final-table').checked) this.updateFinalTableCheckboxes();
+  },
+
+  updateFinalTableCheckboxes() {
+    const container = document.getElementById('final-table-checkboxes');
+    const players = App.playersCache.filter(p => this.selectedPlayers.has(p.id));
+    // Preserve current selections
+    const currentlyChecked = new Set();
+    container.querySelectorAll('input:checked').forEach(cb => currentlyChecked.add(cb.value));
+
+    container.innerHTML = players.map(p => {
+      const checked = currentlyChecked.has(p.id) ? 'checked' : '';
+      const sel = checked ? 'selected' : '';
+      return `<label class="checkbox-item ${sel}" data-ft-id="${p.id}">
+        <input type="checkbox" value="${p.id}" ${checked}>
+        <span>${this.escHtml(p.name)}</span>
+      </label>`;
+    }).join('');
+
+    container.querySelectorAll('.checkbox-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        this.enforceFinalTableLimit();
+      });
+      item.querySelector('input').addEventListener('change', () => {
+        item.classList.toggle('selected', item.querySelector('input').checked);
+        this.enforceFinalTableLimit();
+      });
+    });
+  },
+
+  enforceFinalTableLimit() {
+    const container = document.getElementById('final-table-checkboxes');
+    const checked = container.querySelectorAll('input:checked');
+    if (checked.length > 9) {
+      // Uncheck the last one
+      const last = checked[checked.length - 1];
+      last.checked = false;
+      last.closest('.checkbox-item').classList.remove('selected');
+      App.toast('Final table is limited to 9 players', 'error');
+    }
+  },
+
+  getFinalTablePlayerIds() {
+    if (!document.getElementById('enable-final-table').checked) return new Set();
+    const ids = new Set();
+    document.querySelectorAll('#final-table-checkboxes input:checked').forEach(cb => ids.add(cb.value));
+    return ids;
   },
 
   updatePreview() {
@@ -182,13 +248,14 @@ const EnterGame = {
       else if (id === pos4) { pts = 2; label = '4th'; cls = 'text-muted'; }
 
       const isBubble = id === bubble;
-      rows.push({ name: playerMap[id] || '?', pts, label, cls, isBubble });
+      const isFT = this.getFinalTablePlayerIds().has(id);
+      rows.push({ name: playerMap[id] || '?', pts, label, cls, isBubble, isFT });
     });
 
     rows.sort((a, b) => b.pts - a.pts);
     rows.forEach(r => {
       html += `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.85rem">
-        <span class="${r.cls}">${this.escHtml(r.name)} ${r.label ? `(${r.label})` : ''} ${r.isBubble ? '<span class="text-red">🫧</span>' : ''}</span>
+        <span class="${r.cls}">${this.escHtml(r.name)} ${r.label ? `(${r.label})` : ''} ${r.isFT ? '<span style="font-size:0.7rem;color:var(--gold)">FT</span>' : ''} ${r.isBubble ? '<span class="text-red">🫧</span>' : ''}</span>
         <span style="font-weight:700">${r.pts} pts</span>
       </div>`;
     });
@@ -252,6 +319,7 @@ const EnterGame = {
     }
 
     // Build results
+    const finalTableIds = this.getFinalTablePlayerIds();
     const resultRows = [];
     this.selectedPlayers.forEach(id => {
       let position = null;
@@ -266,6 +334,7 @@ const EnterGame = {
         player_id: id,
         position,
         is_bubble: id === bubble,
+        is_final_table: finalTableIds.has(id),
         points
       });
     });
@@ -345,6 +414,18 @@ const EnterGame = {
       document.getElementById('pos-4-wrapper').style.display = 'block';
     }
 
+    // Restore final table selections
+    const ftPlayers = results.filter(r => r.is_final_table);
+    if (ftPlayers.length) {
+      document.getElementById('enable-final-table').checked = true;
+      document.getElementById('final-table-section').style.display = 'block';
+      this.updateFinalTableCheckboxes();
+      ftPlayers.forEach(r => {
+        const cb = document.querySelector(`#final-table-checkboxes input[value="${r.player_id}"]`);
+        if (cb) { cb.checked = true; cb.closest('.checkbox-item').classList.add('selected'); }
+      });
+    }
+
     if (game.notes) document.getElementById('game-notes').value = game.notes;
 
     this.updatePreview();
@@ -415,6 +496,7 @@ const EnterGame = {
     // Delete old results, insert new
     await db.from('results').delete().eq('game_id', gameId);
 
+    const finalTableIds = this.getFinalTablePlayerIds();
     const resultRows = [];
     this.selectedPlayers.forEach(id => {
       let position = null;
@@ -429,6 +511,7 @@ const EnterGame = {
         player_id: id,
         position,
         is_bubble: id === bubble,
+        is_final_table: finalTableIds.has(id),
         points
       });
     });

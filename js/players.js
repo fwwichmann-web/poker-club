@@ -95,6 +95,7 @@ const Players = {
     const wins = results.filter(r => r.position === 1).length;
     const podiums = results.filter(r => r.position && r.position <= 3).length;
     const bubbles = results.filter(r => r.is_bubble).length;
+    const finalTables = results.filter(r => r.is_final_table).length;
     const avgPoints = games ? (totalPoints / games).toFixed(1) : '0';
     const winPct = games ? ((wins / games) * 100).toFixed(0) : '0';
 
@@ -124,6 +125,10 @@ const Players = {
           <div class="stat-value">${bubbles}</div>
           <div class="stat-label">Bubbles</div>
         </div>
+        <div class="stat-item">
+          <div class="stat-value">${finalTables}</div>
+          <div class="stat-label">Final Tables</div>
+        </div>
       </div>
       ${games >= 10 ? '<div style="text-align:center;margin-bottom:16px"><span class="badge badge-qualified">Qualified for End-of-Year</span></div>' : `<div style="text-align:center;margin-bottom:16px;font-size:0.8rem;color:var(--text-muted)">${10 - games} more game${10 - games !== 1 ? 's' : ''} to qualify</div>`}
     `;
@@ -138,6 +143,7 @@ const Players = {
         else if (r.position === 3) badge = '<span class="badge badge-bronze">3rd</span>';
         else if (r.position === 4) badge = '<span class="badge" style="background:#1a2a1a;color:var(--text-muted)">4th</span>';
         if (r.is_bubble) badge += ' <span class="badge badge-bubble">Bubble</span>';
+        if (r.is_final_table) badge += ' <span class="badge" style="background:#2a2a10;color:var(--gold)">FT</span>';
 
         html += `<div class="game-result-row">
           <span style="font-size:0.85rem">${App.formatDate(r.games?.game_date)} ${badge}</span>

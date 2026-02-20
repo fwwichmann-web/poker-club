@@ -7,7 +7,7 @@ const Leaderboard = {
 
     const { data: results, error } = await db
       .from('results')
-      .select('player_id, points, position, is_bubble, game_id');
+      .select('player_id, points, position, is_bubble, is_final_table, game_id');
 
     if (error) {
       container.innerHTML = '<div class="empty-state"><p>Failed to load leaderboard</p></div>';
@@ -22,7 +22,7 @@ const Leaderboard = {
     const stats = {};
     results.forEach(r => {
       if (!stats[r.player_id]) {
-        stats[r.player_id] = { points: 0, games: 0, wins: 0, podiums: 0, bubbles: 0, gameIds: new Set() };
+        stats[r.player_id] = { points: 0, games: 0, wins: 0, podiums: 0, bubbles: 0, finalTables: 0, gameIds: new Set() };
       }
       const s = stats[r.player_id];
       s.points += r.points;
@@ -33,6 +33,7 @@ const Leaderboard = {
       if (r.position === 1) { s.wins++; s.podiums++; }
       else if (r.position === 2 || r.position === 3) { s.podiums++; }
       if (r.is_bubble) s.bubbles++;
+      if (r.is_final_table) s.finalTables++;
     });
 
     // Build sorted leaderboard

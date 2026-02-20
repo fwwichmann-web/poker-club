@@ -24,6 +24,7 @@ CREATE TABLE results (
   player_id uuid NOT NULL REFERENCES players(id),
   position smallint CHECK (position IN (1, 2, 3, 4)),
   is_bubble boolean DEFAULT false,
+  is_final_table boolean DEFAULT false,
   points smallint NOT NULL CHECK (points IN (1, 2, 3, 5, 10)),
   UNIQUE (game_id, player_id)
 );

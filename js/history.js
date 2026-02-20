@@ -59,6 +59,7 @@ const GameHistory = {
               else if (r.position === 3) badge = '<span class="badge badge-bronze">3rd</span>';
               else if (r.position === 4) badge = '<span class="badge" style="background:#1a2a1a;color:var(--text-muted)">4th</span>';
               if (r.is_bubble) badge += ' <span class="badge badge-bubble">Bubble</span>';
+              if (r.is_final_table) badge += ' <span class="badge" style="background:#2a2a10;color:var(--gold)">FT</span>';
 
               return `<div class="game-result-row">
                 <span>${this.escHtml(r.players?.name || '?')} ${badge}</span>
