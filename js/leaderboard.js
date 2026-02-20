@@ -61,15 +61,15 @@ const Leaderboard = {
       const rank = i + 1;
       const qualified = p.games >= 10;
       const rankClass = rank <= 3 ? `rank-${rank}` : '';
-      const rowClass = qualified ? 'qualified' : (p.active ? '' : 'not-qualified');
+      const rowClass = qualified ? 'qualified' : '';
 
       html += `
         <div class="leaderboard-row ${rowClass}">
           <div class="rank ${rankClass}">${rank}</div>
           <div class="player-info">
-            <div class="player-name">${this.escHtml(p.name)}</div>
+            <div class="player-name">${this.escHtml(p.name)} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400">(${p.games})</span></div>
             <div class="player-meta">
-              ${p.games} game${p.games !== 1 ? 's' : ''} · ${p.wins}W · ${p.podiums}P · ${p.bubbles}B
+              ${p.wins}W · ${p.podiums}P · ${p.bubbles}B
               ${qualified ? ' <span class="badge badge-qualified">Qualified</span>' : ''}
             </div>
           </div>

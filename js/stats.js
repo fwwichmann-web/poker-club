@@ -33,7 +33,7 @@ const Stats = {
     results.forEach(r => {
       const name = r.players?.name || 'Unknown';
       if (!playerStats[name]) {
-        playerStats[name] = { points: 0, games: 0, wins: 0, bubbles: 0, gameIds: new Set(), recentPoints: [] };
+        playerStats[name] = { points: 0, games: 0, wins: 0, bubbles: 0, finalTables: 0, gameIds: new Set(), recentPoints: [] };
       }
       const s = playerStats[name];
       s.points += r.points;
@@ -43,6 +43,7 @@ const Stats = {
       }
       if (r.position === 1) s.wins++;
       if (r.is_bubble) s.bubbles++;
+      if (r.is_final_table) s.finalTables++;
     });
 
     // Calculate recent form (last 5 games per player)
@@ -70,6 +71,8 @@ const Stats = {
     const entries = Object.entries(playerStats);
     const mostWins = entries.reduce((best, [name, s]) => s.wins > (best.val || 0) ? { name, val: s.wins } : best, {});
     const mostBubbles = entries.reduce((best, [name, s]) => s.bubbles > (best.val || 0) ? { name, val: s.bubbles } : best, {});
+    const mostFinalTables = entries.reduce((best, [name, s]) => s.finalTables > (best.val || 0) ? { name, val: s.finalTables } : best, {});
+    const mostGames = entries.reduce((best, [name, s]) => s.games > (best.val || 0) ? { name, val: s.games } : best, {});
     const bestAvg = entries
       .filter(([, s]) => s.games >= 3) // min 3 games for avg
       .reduce((best, [name, s]) => {
@@ -140,6 +143,19 @@ const Stats = {
           <div class="stats-card-title">Hot Streak</div>
           <div class="stats-card-value">${this.escHtml(bestForm.name || '—')}</div>
           <div class="stats-card-sub">${bestForm.val ? bestForm.val.toFixed(1) + ' avg (last ' + bestForm.games + ')' : 'Min 3 games'}</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stats-card">
+          <div class="stats-card-title">Most Final Tables</div>
+          <div class="stats-card-value text-gold">${this.escHtml(mostFinalTables.name || '—')}</div>
+          <div class="stats-card-sub">${mostFinalTables.val || 0} final tables</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-title">Most Games Played</div>
+          <div class="stats-card-value">${this.escHtml(mostGames.name || '—')}</div>
+          <div class="stats-card-sub">${mostGames.val || 0} games</div>
         </div>
       </div>
     `;
