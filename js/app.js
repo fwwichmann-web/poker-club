@@ -110,6 +110,7 @@ const App = {
     if (pos === 1) return 10;
     if (pos === 2) return 5;
     if (pos === 3) return 3;
+    if (pos === 4) return 2;
     return 1;
   },
 

@@ -22,9 +22,9 @@ CREATE TABLE results (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   game_id uuid NOT NULL REFERENCES games(id) ON DELETE CASCADE,
   player_id uuid NOT NULL REFERENCES players(id),
-  position smallint CHECK (position IN (1, 2, 3)),
+  position smallint CHECK (position IN (1, 2, 3, 4)),
   is_bubble boolean DEFAULT false,
-  points smallint NOT NULL CHECK (points IN (1, 3, 5, 10)),
+  points smallint NOT NULL CHECK (points IN (1, 2, 3, 5, 10)),
   UNIQUE (game_id, player_id)
 );
 

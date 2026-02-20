@@ -136,6 +136,7 @@ const Players = {
         if (r.position === 1) badge = '<span class="badge badge-gold">1st</span>';
         else if (r.position === 2) badge = '<span class="badge badge-silver">2nd</span>';
         else if (r.position === 3) badge = '<span class="badge badge-bronze">3rd</span>';
+        else if (r.position === 4) badge = '<span class="badge" style="background:#1a2a1a;color:var(--text-muted)">4th</span>';
         if (r.is_bubble) badge += ' <span class="badge badge-bubble">Bubble</span>';
 
         html += `<div class="game-result-row">

@@ -46,6 +46,16 @@ const EnterGame = {
               <select id="pos-3"><option value="">—</option></select>
             </div>
           </div>
+          <div style="margin-top:8px">
+            <label class="checkbox-item" id="enable-4th-toggle" style="display:inline-flex;width:auto">
+              <input type="checkbox" id="enable-4th">
+              <span>Pay 4th place</span>
+            </label>
+            <div id="pos-4-wrapper" style="display:none;margin-top:8px;max-width:33%">
+              <label style="font-size:0.7rem;color:var(--text-muted)">4th Place</label>
+              <select id="pos-4"><option value="">—</option></select>
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label>Bubble Player</label>
@@ -87,8 +97,15 @@ const EnterGame = {
     });
 
     // Podium/bubble change → preview
-    ['pos-1', 'pos-2', 'pos-3', 'bubble-player'].forEach(id => {
+    ['pos-1', 'pos-2', 'pos-3', 'pos-4', 'bubble-player'].forEach(id => {
       document.getElementById(id).addEventListener('change', () => this.updatePreview());
+    });
+
+    // 4th place toggle
+    document.getElementById('enable-4th').addEventListener('change', (e) => {
+      document.getElementById('pos-4-wrapper').style.display = e.target.checked ? 'block' : 'none';
+      if (!e.target.checked) document.getElementById('pos-4').value = '';
+      this.updatePreview();
     });
 
     // Submit
@@ -106,7 +123,7 @@ const EnterGame = {
     const players = App.playersCache.filter(p => this.selectedPlayers.has(p.id));
     const options = players.map(p => `<option value="${p.id}">${this.escHtml(p.name)}</option>`).join('');
 
-    ['pos-1', 'pos-2', 'pos-3', 'bubble-player'].forEach(id => {
+    ['pos-1', 'pos-2', 'pos-3', 'pos-4', 'bubble-player'].forEach(id => {
       const sel = document.getElementById(id);
       const current = sel.value;
       sel.innerHTML = `<option value="">—</option>${options}`;
@@ -126,6 +143,7 @@ const EnterGame = {
     const pos1 = document.getElementById('pos-1').value;
     const pos2 = document.getElementById('pos-2').value;
     const pos3 = document.getElementById('pos-3').value;
+    const pos4 = document.getElementById('pos-4').value;
     const bubble = document.getElementById('bubble-player').value;
     const playerMap = {};
     App.playersCache.forEach(p => { playerMap[p.id] = p.name; });
@@ -140,6 +158,7 @@ const EnterGame = {
       if (id === pos1) { pts = 10; label = '1st'; cls = 'text-gold'; }
       else if (id === pos2) { pts = 5; label = '2nd'; cls = 'text-silver'; }
       else if (id === pos3) { pts = 3; label = '3rd'; cls = 'text-bronze'; }
+      else if (id === pos4) { pts = 2; label = '4th'; cls = 'text-muted'; }
 
       const isBubble = id === bubble;
       rows.push({ name: playerMap[id] || '?', pts, label, cls, isBubble });
@@ -166,6 +185,7 @@ const EnterGame = {
     const pos1 = document.getElementById('pos-1').value;
     const pos2 = document.getElementById('pos-2').value;
     const pos3 = document.getElementById('pos-3').value;
+    const pos4 = document.getElementById('pos-4').value;
 
     if (!pos1 || !pos2 || !pos3) {
       App.toast('Please assign all podium positions', 'error');
@@ -173,8 +193,10 @@ const EnterGame = {
     }
 
     // Check for duplicate podium selections
-    if (new Set([pos1, pos2, pos3]).size < 3) {
-      App.toast('Each podium position must be a different player', 'error');
+    const podiumPicks = [pos1, pos2, pos3];
+    if (pos4) podiumPicks.push(pos4);
+    if (new Set(podiumPicks).size < podiumPicks.length) {
+      App.toast('Each position must be a different player', 'error');
       return;
     }
 
@@ -205,6 +227,7 @@ const EnterGame = {
       if (id === pos1) { position = 1; points = 10; }
       else if (id === pos2) { position = 2; points = 5; }
       else if (id === pos3) { position = 3; points = 3; }
+      else if (id === pos4) { position = 4; points = 2; }
 
       resultRows.push({
         game_id: game.id,
@@ -272,12 +295,18 @@ const EnterGame = {
     this.updatePodiumSection();
 
     // Set podium & bubble
+    let has4th = false;
     results.forEach(r => {
       if (r.position === 1) document.getElementById('pos-1').value = r.player_id;
       if (r.position === 2) document.getElementById('pos-2').value = r.player_id;
       if (r.position === 3) document.getElementById('pos-3').value = r.player_id;
+      if (r.position === 4) { document.getElementById('pos-4').value = r.player_id; has4th = true; }
       if (r.is_bubble) document.getElementById('bubble-player').value = r.player_id;
     });
+    if (has4th) {
+      document.getElementById('enable-4th').checked = true;
+      document.getElementById('pos-4-wrapper').style.display = 'block';
+    }
 
     if (game.notes) document.getElementById('game-notes').value = game.notes;
 
@@ -303,14 +332,17 @@ const EnterGame = {
     const pos1 = document.getElementById('pos-1').value;
     const pos2 = document.getElementById('pos-2').value;
     const pos3 = document.getElementById('pos-3').value;
+    const pos4 = document.getElementById('pos-4').value;
 
     if (!pos1 || !pos2 || !pos3) {
       App.toast('Please assign all podium positions', 'error');
       return;
     }
 
-    if (new Set([pos1, pos2, pos3]).size < 3) {
-      App.toast('Each podium position must be a different player', 'error');
+    const podiumPicks = [pos1, pos2, pos3];
+    if (pos4) podiumPicks.push(pos4);
+    if (new Set(podiumPicks).size < podiumPicks.length) {
+      App.toast('Each position must be a different player', 'error');
       return;
     }
 
@@ -342,6 +374,7 @@ const EnterGame = {
       if (id === pos1) { position = 1; points = 10; }
       else if (id === pos2) { position = 2; points = 5; }
       else if (id === pos3) { position = 3; points = 3; }
+      else if (id === pos4) { position = 4; points = 2; }
 
       resultRows.push({
         game_id: gameId,
