@@ -32,7 +32,7 @@ const EnterGame = {
       <div id="podium-section" style="display:none">
         <div class="form-group">
           <label>Podium Positions</label>
-          <div class="podium-row">
+          <div class="podium-row" style="grid-template-columns:1fr 1fr">
             <div>
               <label style="font-size:0.7rem;color:var(--gold)">1st Place</label>
               <select id="pos-1"><option value="">—</option></select>
@@ -41,20 +41,24 @@ const EnterGame = {
               <label style="font-size:0.7rem;color:var(--silver)">2nd Place</label>
               <select id="pos-2"><option value="">—</option></select>
             </div>
-            <div>
-              <label style="font-size:0.7rem;color:var(--bronze)">3rd Place</label>
-              <select id="pos-3"><option value="">—</option></select>
-            </div>
           </div>
-          <div style="margin-top:8px">
-            <label class="checkbox-item" id="enable-4th-toggle" style="display:inline-flex;width:auto">
-              <input type="checkbox" id="enable-4th">
-              <span>Pay 4th place</span>
+          <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
+            <label class="checkbox-item" style="display:inline-flex;width:auto">
+              <input type="checkbox" id="enable-3rd" checked>
+              <span>Pay 3rd</span>
             </label>
-            <div id="pos-4-wrapper" style="display:none;margin-top:8px;max-width:33%">
-              <label style="font-size:0.7rem;color:var(--text-muted)">4th Place</label>
-              <select id="pos-4"><option value="">—</option></select>
-            </div>
+            <label class="checkbox-item" style="display:inline-flex;width:auto">
+              <input type="checkbox" id="enable-4th">
+              <span>Pay 4th</span>
+            </label>
+          </div>
+          <div id="pos-3-wrapper" style="margin-top:8px;max-width:50%">
+            <label style="font-size:0.7rem;color:var(--bronze)">3rd Place</label>
+            <select id="pos-3"><option value="">—</option></select>
+          </div>
+          <div id="pos-4-wrapper" style="display:none;margin-top:8px;max-width:50%">
+            <label style="font-size:0.7rem;color:var(--text-muted)">4th Place</label>
+            <select id="pos-4"><option value="">—</option></select>
           </div>
         </div>
         <div class="form-group">
@@ -101,10 +105,27 @@ const EnterGame = {
       document.getElementById(id).addEventListener('change', () => this.updatePreview());
     });
 
+    // 3rd place toggle
+    document.getElementById('enable-3rd').addEventListener('change', (e) => {
+      document.getElementById('pos-3-wrapper').style.display = e.target.checked ? 'block' : 'none';
+      if (!e.target.checked) {
+        document.getElementById('pos-3').value = '';
+        // Also disable 4th if 3rd is off
+        document.getElementById('enable-4th').checked = false;
+        document.getElementById('enable-4th').dispatchEvent(new Event('change'));
+      }
+      this.updatePreview();
+    });
+
     // 4th place toggle
     document.getElementById('enable-4th').addEventListener('change', (e) => {
       document.getElementById('pos-4-wrapper').style.display = e.target.checked ? 'block' : 'none';
       if (!e.target.checked) document.getElementById('pos-4').value = '';
+      // Can't have 4th without 3rd
+      if (e.target.checked && !document.getElementById('enable-3rd').checked) {
+        document.getElementById('enable-3rd').checked = true;
+        document.getElementById('pos-3-wrapper').style.display = 'block';
+      }
       this.updatePreview();
     });
 
@@ -114,7 +135,7 @@ const EnterGame = {
 
   updatePodiumSection() {
     const section = document.getElementById('podium-section');
-    if (this.selectedPlayers.size < 3) {
+    if (this.selectedPlayers.size < 2) {
       section.style.display = 'none';
       return;
     }
@@ -135,15 +156,15 @@ const EnterGame = {
 
   updatePreview() {
     const preview = document.getElementById('points-preview');
-    if (this.selectedPlayers.size < 3) {
+    if (this.selectedPlayers.size < 2) {
       preview.style.display = 'none';
       return;
     }
 
     const pos1 = document.getElementById('pos-1').value;
     const pos2 = document.getElementById('pos-2').value;
-    const pos3 = document.getElementById('pos-3').value;
-    const pos4 = document.getElementById('pos-4').value;
+    const pos3 = document.getElementById('enable-3rd').checked ? document.getElementById('pos-3').value : '';
+    const pos4 = document.getElementById('enable-4th').checked ? document.getElementById('pos-4').value : '';
     const bubble = document.getElementById('bubble-player').value;
     const playerMap = {};
     App.playersCache.forEach(p => { playerMap[p.id] = p.name; });
@@ -177,23 +198,34 @@ const EnterGame = {
   },
 
   async submitGame() {
-    if (this.selectedPlayers.size < 3) {
-      App.toast('Need at least 3 players', 'error');
+    if (this.selectedPlayers.size < 2) {
+      App.toast('Need at least 2 players', 'error');
       return;
     }
 
     const pos1 = document.getElementById('pos-1').value;
     const pos2 = document.getElementById('pos-2').value;
-    const pos3 = document.getElementById('pos-3').value;
-    const pos4 = document.getElementById('pos-4').value;
+    const pay3rd = document.getElementById('enable-3rd').checked;
+    const pay4th = document.getElementById('enable-4th').checked;
+    const pos3 = pay3rd ? document.getElementById('pos-3').value : '';
+    const pos4 = pay4th ? document.getElementById('pos-4').value : '';
 
-    if (!pos1 || !pos2 || !pos3) {
-      App.toast('Please assign all podium positions', 'error');
+    if (!pos1 || !pos2) {
+      App.toast('Please assign 1st and 2nd place', 'error');
+      return;
+    }
+    if (pay3rd && !pos3) {
+      App.toast('Please assign 3rd place or uncheck "Pay 3rd"', 'error');
+      return;
+    }
+    if (pay4th && !pos4) {
+      App.toast('Please assign 4th place or uncheck "Pay 4th"', 'error');
       return;
     }
 
     // Check for duplicate podium selections
-    const podiumPicks = [pos1, pos2, pos3];
+    const podiumPicks = [pos1, pos2];
+    if (pos3) podiumPicks.push(pos3);
     if (pos4) podiumPicks.push(pos4);
     if (new Set(podiumPicks).size < podiumPicks.length) {
       App.toast('Each position must be a different player', 'error');
@@ -295,14 +327,19 @@ const EnterGame = {
     this.updatePodiumSection();
 
     // Set podium & bubble
+    let has3rd = false;
     let has4th = false;
     results.forEach(r => {
       if (r.position === 1) document.getElementById('pos-1').value = r.player_id;
       if (r.position === 2) document.getElementById('pos-2').value = r.player_id;
-      if (r.position === 3) document.getElementById('pos-3').value = r.player_id;
+      if (r.position === 3) { document.getElementById('pos-3').value = r.player_id; has3rd = true; }
       if (r.position === 4) { document.getElementById('pos-4').value = r.player_id; has4th = true; }
       if (r.is_bubble) document.getElementById('bubble-player').value = r.player_id;
     });
+    if (!has3rd) {
+      document.getElementById('enable-3rd').checked = false;
+      document.getElementById('pos-3-wrapper').style.display = 'none';
+    }
     if (has4th) {
       document.getElementById('enable-4th').checked = true;
       document.getElementById('pos-4-wrapper').style.display = 'block';
@@ -324,22 +361,33 @@ const EnterGame = {
   },
 
   async updateGame(gameId) {
-    if (this.selectedPlayers.size < 3) {
-      App.toast('Need at least 3 players', 'error');
+    if (this.selectedPlayers.size < 2) {
+      App.toast('Need at least 2 players', 'error');
       return;
     }
 
     const pos1 = document.getElementById('pos-1').value;
     const pos2 = document.getElementById('pos-2').value;
-    const pos3 = document.getElementById('pos-3').value;
-    const pos4 = document.getElementById('pos-4').value;
+    const pay3rd = document.getElementById('enable-3rd').checked;
+    const pay4th = document.getElementById('enable-4th').checked;
+    const pos3 = pay3rd ? document.getElementById('pos-3').value : '';
+    const pos4 = pay4th ? document.getElementById('pos-4').value : '';
 
-    if (!pos1 || !pos2 || !pos3) {
-      App.toast('Please assign all podium positions', 'error');
+    if (!pos1 || !pos2) {
+      App.toast('Please assign 1st and 2nd place', 'error');
+      return;
+    }
+    if (pay3rd && !pos3) {
+      App.toast('Please assign 3rd place or uncheck "Pay 3rd"', 'error');
+      return;
+    }
+    if (pay4th && !pos4) {
+      App.toast('Please assign 4th place or uncheck "Pay 4th"', 'error');
       return;
     }
 
-    const podiumPicks = [pos1, pos2, pos3];
+    const podiumPicks = [pos1, pos2];
+    if (pos3) podiumPicks.push(pos3);
     if (pos4) podiumPicks.push(pos4);
     if (new Set(podiumPicks).size < podiumPicks.length) {
       App.toast('Each position must be a different player', 'error');
